@@ -3,21 +3,30 @@
 #include <sys/ioctl.h>
 #include <unistd.h> // https://stackoverflow.com/a/23369919
 #include <cstdio>
-#define min(a, b) ((a)<(b)?(a):(b))
-#define max(a, b) ((a)<(b)?(b):(a))
+#include <algorithm>
+#include <thread>
+#include <chrono>
+//#define min(a, b) ((a)<(b)?(a):(b))
+//#define max(a, b) ((a)<(b)?(b):(a))
+
+const auto FRAME_PERIOD = std::chrono::milliseconds(10);
 
 float noise(float c);
 
+struct winsize size;
+
 int main()
 {
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+    const int WIDTH = size.ws_col;
     float cur = 0, sped = 0.01;
+    float mn=0, mx=0;
     while (true)
     {
-        float mn=0, mx=0;
         float got = noise(cur += sped)*WIDTH/2;
-        for (int i=1; i<=got; ++i) putc(' ', stdout); printf("#\n");
-        mn = min(mn, got); mx = max(mx, got);
-        //printf("%10f %10f\n", mn, mx);
+        for (int i=-(WIDTH/2); i<=got; ++i) putc(' ', stdout); printf("#\n");
+        mn = std::min(mn, got); mx = std::max(mx, got);
+        std::this_thread::sleep_for(FRAME_PERIOD);
     }
 }
 
