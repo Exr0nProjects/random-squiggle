@@ -10,28 +10,27 @@
 //#define max(a, b) ((a)<(b)?(b):(a))
 
 //const int LOOP_MILLIS = 1000*60*60*24*365;
-const int LOOP_MILLIS = 1000*5;
+//const int LOOP_MILLIS = 1000*5;
+const auto SHIFT = std::chrono::seconds(1577865600); // 50 years
 const auto FRAME_PERIOD = std::chrono::milliseconds(10);
 const double TIME_SCALE = 0.002;
 
-float noise(float c);
+double noise(double c);
 
 struct winsize size;
 
 int main()
 {
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-    const int WIDTH = size.ws_col;
-    float cur = 0;
     float mn=0, mx=0;
     while (true)
     {
-
-        const auto now = std::chrono::system_clock::now().time_since_epoch();
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+        const int WIDTH = size.ws_col;
+        const auto now = (std::chrono::system_clock::now()-SHIFT).time_since_epoch();
         const auto shift = std::chrono::duration_cast<std::chrono::milliseconds>(now);
-        //printf("%f\n", (double)(shift.count()%LOOP_MILLIS)*TIME_SCALE);
-        const float cur = (double)(shift.count()%LOOP_MILLIS)*TIME_SCALE;
-        //printf("%f\n", cur);
+        //printf("%f\n", (double)shift.count()*TIME_SCALE);
+        const double cur = (double)(shift.count())*TIME_SCALE;
+        //printf("%lf\n", cur);
         float got = noise(cur)*WIDTH/2;
         for (int i=-(WIDTH/2); i<=got; ++i) putc(' ', stdout); printf("#\n");
         //mn = std::min(mn, got); mx = std::max(mx, got);
@@ -147,21 +146,21 @@ float grad( int hash, float x ) {
 }
 
 // 1D simplex noise
-float noise(float x) {
+double noise(double x) {
 
   int i0 = FASTFLOOR(x);
   int i1 = i0 + 1;
-  float x0 = x - i0;
-  float x1 = x0 - 1.0f;
+  double x0 = x - i0;
+  double x1 = x0 - 1.0f;
 
-  float n0, n1;
+  double n0, n1;
 
-  float t0 = 1.0f - x0*x0;
+  double t0 = 1.0f - x0*x0;
 //  if(t0 < 0.0f) t0 = 0.0f;
   t0 *= t0;
   n0 = t0 * t0 * grad(perm[i0 & 0xff], x0);
 
-  float t1 = 1.0f - x1*x1;
+  double t1 = 1.0f - x1*x1;
 //  if(t1 < 0.0f) t1 = 0.0f;
   t1 *= t1;
   n1 = t1 * t1 * grad(perm[i1 & 0xff], x1);
