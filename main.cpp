@@ -9,7 +9,10 @@
 //#define min(a, b) ((a)<(b)?(a):(b))
 //#define max(a, b) ((a)<(b)?(b):(a))
 
+//const int LOOP_MILLIS = 1000*60*60*24*365;
+const int LOOP_MILLIS = 1000*5;
 const auto FRAME_PERIOD = std::chrono::milliseconds(10);
+const double TIME_SCALE = 0.002;
 
 float noise(float c);
 
@@ -19,13 +22,19 @@ int main()
 {
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
     const int WIDTH = size.ws_col;
-    float cur = 0, sped = 0.01;
+    float cur = 0;
     float mn=0, mx=0;
     while (true)
     {
-        float got = noise(cur += sped)*WIDTH/2;
+
+        const auto now = std::chrono::system_clock::now().time_since_epoch();
+        const auto shift = std::chrono::duration_cast<std::chrono::milliseconds>(now);
+        //printf("%f\n", (double)(shift.count()%LOOP_MILLIS)*TIME_SCALE);
+        const float cur = (double)(shift.count()%LOOP_MILLIS)*TIME_SCALE;
+        //printf("%f\n", cur);
+        float got = noise(cur)*WIDTH/2;
         for (int i=-(WIDTH/2); i<=got; ++i) putc(' ', stdout); printf("#\n");
-        mn = std::min(mn, got); mx = std::max(mx, got);
+        //mn = std::min(mn, got); mx = std::max(mx, got);
         std::this_thread::sleep_for(FRAME_PERIOD);
     }
 }
